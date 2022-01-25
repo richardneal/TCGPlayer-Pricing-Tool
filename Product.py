@@ -1,7 +1,7 @@
 import math
 
-from Enums.Condition import Condition
-from Enums.Price import Price, PriceType
+from Enums.Condition import Condition, Conditions
+from Enums.Price import Price, PriceType, Consts
 from Enums.Rarity import Rarity
 
 
@@ -36,7 +36,10 @@ class Product:
         self.photo_url = photo_url
         self.market_price = Price(market_price)
         self.condition = Condition(condition)
-        self.rarity = Rarity(rarity)
+        if self.condition.condition is Conditions.UNOPENED:
+            self.rarity = Rarity.PRODUCT
+        else:
+            self.rarity = Rarity(rarity)
         self.number = number
         self.tcgplayer_id = tcgplayer_id
         self.product_line = product_line
@@ -44,10 +47,17 @@ class Product:
         self.product_name = product_name
         self.title = title
 
-    def __str__(self):
-        return f'{self.set_name}: {self.product_name} - {self.condition.condition.value} {self.condition.finish.value} - {self.marketplace_price.price}'
+    def __str__(self) -> str:
+        return f'{self.total_quantity}x {self.set_name}: {self.product_name} - ' \
+               f'{self.condition.condition.value} {self.condition.finish.value} - {self.marketplace_price.price}'
 
-    def to_row(self):
+    def to_row(self) -> list:
+        if self.marketplace_price.type is PriceType.NONE:
+            print(f'{self} has no price set. Defaulting it to {Consts.SYP_DEFAULT_PRICE}, '
+                  f'you should modify that in the output CSV')
+            marketplace_price = Consts.SYP_DEFAULT_PRICE
+        else:
+            marketplace_price = self.marketplace_price.price
         return [
             self.tcgplayer_id,
             self.product_line,
@@ -63,19 +73,18 @@ class Product:
             self.low_price.price,
             self.total_quantity,
             self.add_to_quantity,
-            self.marketplace_price.price,
+            marketplace_price,
             self.photo_url
         ]
 
-    def round_to_99(self):
-        self.marketplace_price.price = math.ceil(self.marketplace_price.price) - 0.01
+    def round_to_99_cents(self):
+        if self.marketplace_price.type is PriceType.SOME:
+            self.marketplace_price.price = math.ceil(self.marketplace_price.price) - 0.01
 
     def to_direct_low_with_multiplier(self, multiplier: float = 1.0):
-        if self.direct_low_price.price_type is PriceType.SOME:
+        if self.direct_low_price.type is PriceType.SOME:
             self.marketplace_price = Price(self.direct_low_price.price * multiplier)
-        # else:
-        #     self.marketplace_price.price = Price('9999').price
 
     def to_low_with_shipping_with_multiplier(self, multiplier: float = 1.0):
-        if self.low_price_with_shipping.price_type is PriceType.SOME:
+        if self.low_price_with_shipping.type is PriceType.SOME:
             self.marketplace_price = Price(self.low_price_with_shipping.price * multiplier)
