@@ -38,10 +38,13 @@ class Condition:
         for condition_enum in Conditions:
             if condition_enum.value in condition_str:
                 self.condition = condition_enum
+                break
+
         if Finishes.FOIL.value in condition_str:
             self.finish = Finishes.FOIL
         else:
             self.finish = Finishes.NON_FOIL
+
         if Languages.JAPANESE.value in condition_str:
             self.language = Languages.JAPANESE
         else:
