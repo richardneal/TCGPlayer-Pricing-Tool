@@ -49,3 +49,6 @@ class Condition:
             self.language = Languages.JAPANESE
         else:
             self.language = Languages.ENGLISH
+
+    def is_sealed(self):
+        return self.condition is Conditions.UNOPENED

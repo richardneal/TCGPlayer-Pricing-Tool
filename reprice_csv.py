@@ -33,8 +33,8 @@ def output_csv(filename: str, products: list[Product]):
 
 def price_products(products: list[Product]):
     for product in products:
-        # If the product has a Direct Low price, set it to the highest of that or TCGLow + Shipping
-        if product.direct_low_price:
+        # If the product has a Direct Low price, or is sealed, set it to the highest of Direct Low or TCGLow + Shipping
+        if product.direct_low_price or product.condition.is_sealed():
             new_price = max(product.direct_low_price, product.low_price_with_shipping)
             product.reprice(new_price)
         # Otherwise, set it to 1.1x TCGLow + Shipping, rounded to 99 cents
