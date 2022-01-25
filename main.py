@@ -32,13 +32,11 @@ def price_products(products: list[Product]):
     for product in products:
         # If the product has a Direct Low price, set it to the highest of that or TCGLow + Shipping
         if product.direct_low_price:
-            if product.direct_low_price.price >= product.low_price_with_shipping.price:
-                product.to_direct_low_with_multiplier()
-            else:
-                product.to_low_with_shipping_with_multiplier()
+            new_price = max(product.direct_low_price, product.low_price_with_shipping)
+            product.reprice(new_price)
         # Otherwise, set it to 1.1x TCGLow + Shipping, rounded to 99 cents
         elif product.low_price_with_shipping:
-            product.to_low_with_shipping_with_multiplier(1.1, True)
+            product.reprice(product.low_price_with_shipping, 1.1, True)
 
 
 def get_total_price(products: list[Product]) -> float:

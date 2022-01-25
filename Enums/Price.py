@@ -32,6 +32,12 @@ class Price:
         else:
             return False
 
+    def __lt__(self, other):
+        if isinstance(other, Price):
+            return self.price < other.price
+        else:
+            return False
+
     def __str__(self):
         if not self:
             return 'No price set'

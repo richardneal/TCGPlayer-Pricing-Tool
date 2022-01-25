@@ -83,23 +83,12 @@ class Product:
             self.photo_url
         ]
 
-    def to_direct_low_with_multiplier(self, multiplier: float = 1.0, round_to_99_cents: bool = False):
-        if self.direct_low_price:
+    def reprice(self, new_price: Price, multiplier: float = 1.0, round_to_99_cents: bool = False):
+        if new_price:
             if round_to_99_cents:
-                new_price = Price(math.ceil(self.direct_low_price.price * multiplier) - 0.01)
+                new_price = Price(math.ceil(new_price.price * multiplier) - 0.01)
             else:
-                new_price = Price(self.direct_low_price.price * multiplier)
-
-            if new_price != self.marketplace_price:
-                print(f'Repricing {self} from {self.marketplace_price} to {new_price}')
-                self.marketplace_price = new_price
-
-    def to_low_with_shipping_with_multiplier(self, multiplier: float = 1.0, round_to_99_cents: bool = False):
-        if self.low_price_with_shipping:
-            if round_to_99_cents:
-                new_price = Price(math.ceil(self.low_price_with_shipping.price * multiplier) - 0.01)
-            else:
-                new_price = Price(self.low_price_with_shipping.price * multiplier)
+                new_price = Price(new_price.price * multiplier)
 
             if new_price != self.marketplace_price:
                 print(f'Repricing {self} from {self.marketplace_price} to {new_price}')
