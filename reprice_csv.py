@@ -5,6 +5,9 @@
 # LICENSE file in the root directory of this source tree.
 
 import csv
+import os.path
+import sys
+from os.path import exists
 
 from Enums.Headers import Headers
 from Product import Product
@@ -44,10 +47,23 @@ def get_total_price(products: list[Product]) -> float:
 
 
 if __name__ == '__main__':
-    products_list = input_csv('TCG.csv')
+    arguments = sys.argv[1:]
+    input_filename = 'TCG.csv'
+    if arguments:
+        filename_argument = arguments[0]
+        if exists(filename_argument):
+            input_filename = filename_argument
+        elif not exists(input_filename):
+            raise Exception('Either no filename was input, or it was invalid.')
+
+    products_list = input_csv(input_filename)
 
     print(f'Total price before repricing: ${get_total_price(products_list)}')
     price_products(products_list)
     print(f'Total price after repricing: ${get_total_price(products_list)}')
 
-    output_csv('TCG_OUTPUT.csv', products_list)
+    split_output_filename = os.path.splitext(input_filename)
+    output_filename = f'{split_output_filename[0]}_OUTPUT{split_output_filename[1]}'
+
+    print(f'Writing to {output_filename}')
+    output_csv(output_filename, products_list)
