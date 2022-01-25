@@ -1,7 +1,13 @@
+# Copyright (c) 2022, Richard Neal
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree.
+
 import math
 
 from Enums.Condition import Condition, Conditions
-from Enums.Price import Price, PriceType, Consts
+from Enums.Price import Price, Consts
 from Enums.Rarity import Rarity
 
 
@@ -28,8 +34,8 @@ class Product:
                  low_price_with_shipping: str, low_price: str, total_quantity: int, add_to_quantity: int,
                  marketplace_price: str, photo_url: str):
         self.marketplace_price = Price(marketplace_price)
-        self.add_to_quantity = add_to_quantity
-        self.total_quantity = total_quantity
+        self.add_to_quantity = int(add_to_quantity)
+        self.total_quantity = int(total_quantity)
         self.low_price = Price(low_price)
         self.low_price_with_shipping = Price(low_price_with_shipping)
         self.direct_low_price = Price(direct_low_price)
@@ -47,13 +53,13 @@ class Product:
         self.product_name = product_name
         self.title = title
 
-    def __str__(self) -> str:
+    def __str__(self):
         return f'{self.total_quantity}x {self.set_name}: {self.product_name} - ' \
-               f'{self.condition.condition.value} {self.condition.finish.value} - {self.marketplace_price.price}'
+               f'{self.condition.condition.value} {self.condition.finish.value}'
 
     def to_row(self) -> list:
-        if self.marketplace_price.type is PriceType.NONE:
-            print(f'{self} has no price set. Defaulting it to {Consts.SYP_DEFAULT_PRICE}, '
+        if not self.marketplace_price:
+            print(f'{self} has no price set. Defaulting it to {Consts.SYP_DEFAULT_PRICE.value}, '
                   f'you should modify that in the output CSV')
             marketplace_price = Consts.SYP_DEFAULT_PRICE
         else:
@@ -77,14 +83,24 @@ class Product:
             self.photo_url
         ]
 
-    def round_to_99_cents(self):
-        if self.marketplace_price.type is PriceType.SOME:
-            self.marketplace_price.price = math.ceil(self.marketplace_price.price) - 0.01
+    def to_direct_low_with_multiplier(self, multiplier: float = 1.0, round_to_99_cents: bool = False):
+        if self.direct_low_price:
+            if round_to_99_cents:
+                new_price = Price(math.ceil(self.direct_low_price.price * multiplier) - 0.01)
+            else:
+                new_price = Price(self.direct_low_price.price * multiplier)
 
-    def to_direct_low_with_multiplier(self, multiplier: float = 1.0):
-        if self.direct_low_price.type is PriceType.SOME:
-            self.marketplace_price = Price(self.direct_low_price.price * multiplier)
+            if new_price != self.marketplace_price:
+                print(f'Repricing {self} from {self.marketplace_price} to {new_price}')
+                self.marketplace_price = new_price
 
-    def to_low_with_shipping_with_multiplier(self, multiplier: float = 1.0):
-        if self.low_price_with_shipping.type is PriceType.SOME:
-            self.marketplace_price = Price(self.low_price_with_shipping.price * multiplier)
+    def to_low_with_shipping_with_multiplier(self, multiplier: float = 1.0, round_to_99_cents: bool = False):
+        if self.low_price_with_shipping:
+            if round_to_99_cents:
+                new_price = Price(math.ceil(self.low_price_with_shipping.price * multiplier) - 0.01)
+            else:
+                new_price = Price(self.low_price_with_shipping.price * multiplier)
+
+            if new_price != self.marketplace_price:
+                print(f'Repricing {self} from {self.marketplace_price} to {new_price}')
+                self.marketplace_price = new_price

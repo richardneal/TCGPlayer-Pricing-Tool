@@ -1,7 +1,12 @@
+# Copyright (c) 2022, Richard Neal
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree.
+
 import csv
 
 from Enums.Headers import Headers
-from Enums.Price import PriceType
 from Product import Product
 
 
@@ -26,23 +31,25 @@ def output_csv(filename: str, products: list[Product]):
 def price_products(products: list[Product]):
     for product in products:
         # If the product has a Direct Low price, set it to the highest of that or TCGLow + Shipping
-        if product.direct_low_price.type is PriceType.SOME:
+        if product.direct_low_price:
             if product.direct_low_price.price >= product.low_price_with_shipping.price:
-                product.to_direct_low_with_multiplier(1)
+                product.to_direct_low_with_multiplier()
             else:
-                product.to_low_with_shipping_with_multiplier(1)
-        # Otherwise, set it to 1.1x TCGLow + Shipping
-        elif product.low_price_with_shipping.type is PriceType.SOME:
-            product.to_low_with_shipping_with_multiplier(1.1)
-            product.round_to_99_cents()
+                product.to_low_with_shipping_with_multiplier()
+        # Otherwise, set it to 1.1x TCGLow + Shipping, rounded to 99 cents
+        elif product.low_price_with_shipping:
+            product.to_low_with_shipping_with_multiplier(1.1, True)
 
 
 def get_total_price(products: list[Product]) -> float:
-    return sum((product.marketplace_price.price * int(product.total_quantity) for product in products))
+    return round(sum((product.marketplace_price.price * product.total_quantity for product in products)), 2)
 
 
 if __name__ == '__main__':
-    products_list = input_csv('TCGSYP.csv')
+    products_list = input_csv('TCG.csv')
+
+    print(f'Total price before repricing: ${get_total_price(products_list)}')
     price_products(products_list)
-    print(get_total_price(products_list))
-    output_csv('TCGSYPX2.csv', products_list)
+    print(f'Total price after repricing: ${get_total_price(products_list)}')
+
+    output_csv('TCG_OUTPUT.csv', products_list)
