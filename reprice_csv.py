@@ -46,7 +46,7 @@ def get_total_price(products: list[Product]) -> float:
     return round(sum((product.marketplace_price.price * product.total_quantity for product in products)), 2)
 
 
-if __name__ == '__main__':
+def main():
     arguments = sys.argv[1:]
     input_filename = 'TCG.csv'
     if arguments:
@@ -67,3 +67,7 @@ if __name__ == '__main__':
 
     print(f'Writing to {output_filename}')
     output_csv(output_filename, products_list)
+
+
+if __name__ == '__main__':
+    main()
