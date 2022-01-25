@@ -12,6 +12,7 @@ That will reprice all products provided from the input CSV (without modifying it
 1. If the product has a TCG Direct Low price or is sealed, set its price to the higher of TCG Direct Low or TCG Low + Shipping.
 2. If neither of those are true, if the product has a TCG Low + Shipping price, set its price to 1.1 x that price, rounded to 99 cents.
 3. If none of the above are true, which should mean the product has no comparable products on TCGPlayer, set its price to $999.99 and output a warning to reprice it manually.
+
 It will then output a new CSV with the new prices, which will have the same name, but appended with "_OUTPUT"
 
 # License
