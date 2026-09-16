@@ -7,17 +7,25 @@ someone with a small amount of Python knowledge to modify the pricing heuristics
 This tool requires Python >= 3.9 and the above CSV export. It uses only the standard library, so there is nothing to install.
 
 # Usage
-Both scripts below take the path to a TCGPlayer export as their only argument. If you omit it, they look for `TCG.csv` in the current directory.
+Both scripts below take the path to a TCGPlayer export as their only argument, and fall back to `TCG.csv` in the current
+directory if you do not pass one. Passing a path that does not exist is an error rather than a silent fall back, so you
+always know which file was read. Pass `--help` to either for usage.
 
 ## Repricing
 After cloning the repository, in that directory, run `python3 reprice_csv.py <path_to_tcgplayer_export.csv>`. 
 That will reprice all products provided from the input CSV (without modifying it) using the following logic, which likely makes the most sense for TCG Direct sellers, but again, feel free to modify:
 1. If the product has a TCG Direct Low price or is sealed, set its price to the higher of TCG Direct Low or TCG Low + Shipping.
 2. If neither of those are true, if the product has a TCG Low + Shipping price, set its price to 1.1 x that price, rounded to 99 cents.
-3. If none of the above are true, which should mean the product has no comparable products on TCGPlayer, set its price to $999.99 and output a warning to reprice it manually.
+3. If none of the above are true, which should mean the product has no comparable products on TCGPlayer, leave the price
+   you already had alone. Only a product with no price at all is given $999.99, along with a warning, so that it is easy
+   to find and correct in the output CSV rather than being listed at a price you did not choose.
 
-Each repriced product that you have in stock is logged with its old price, its new price, and the percent change between them, and the total
-value of your inventory is printed before and after repricing so you can see the overall effect at a glance.
+Each repriced product that you have in stock is logged with its new price and the percent change from the old one, and the
+total value of your inventory is printed before and after repricing so you can see the overall effect at a glance.
+
+As a safety net, a reprice that would move a price by more than 50% is reported and skipped rather than applied, so that
+one bad day of TCGPlayer data cannot rewrite your whole inventory unattended. Those products are listed for you to review
+by hand. Change `MAX_PRICE_CHANGE` in `Product.py` to adjust the limit, or set it to `None` to apply every reprice.
 
 It will then output a new CSV with the new prices, which will have the same name, but appended with "_OUTPUT"
 

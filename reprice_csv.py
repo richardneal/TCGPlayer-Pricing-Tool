@@ -6,10 +6,15 @@
 
 import os.path
 import sys
-from os.path import exists
+from decimal import Decimal
 
-from CSV import output_csv, input_csv
+from CLI import input_filename
+from CSV import CSVError, output_csv, input_csv
+from Enums.Price import Price, SYP_DEFAULT_PRICE
 from Product import Product, get_total_price
+
+# What to mark a product up by when pricing off TCG Low + Shipping.
+MARKUP = Decimal('1.1')
 
 
 def price_products(products: list[Product]):
@@ -20,26 +25,25 @@ def price_products(products: list[Product]):
             product.reprice(new_price)
         # Otherwise, set it to 1.1x TCGLow + Shipping, rounded to 99 cents
         elif product.low_price_with_shipping:
-            product.reprice(product.low_price_with_shipping, 1.1, True)
+            product.reprice(product.low_price_with_shipping, MARKUP, True)
+
+        # Anything still unpriced has no comparable products to price against, so
+        # flag it rather than listing it at whatever TCGPlayer happens to default to.
+        if not product.marketplace_price:
+            print(f'{product} has no price and nothing to compare it against. Defaulting it to '
+                  f'${SYP_DEFAULT_PRICE}, which you should change in the output CSV')
+            product.marketplace_price = Price(SYP_DEFAULT_PRICE)
 
 
 def main():
-    arguments = sys.argv[1:]
-    input_filename = 'TCG.csv'
-    if arguments:
-        filename_argument = arguments[0]
-        if exists(filename_argument):
-            input_filename = filename_argument
-        elif not exists(input_filename):
-            raise Exception('Either no filename was input, or it was invalid.')
-
-    products_list = input_csv(input_filename)
+    input_csv_filename = input_filename('Reprice a TCGPlayer pricing export.')
+    products_list = input_csv(input_csv_filename)
 
     print(f'Total price before repricing: ${get_total_price(products_list)}')
     price_products(products_list)
     print(f'Total price after repricing: ${get_total_price(products_list)}')
 
-    split_output_filename = os.path.splitext(input_filename)
+    split_output_filename = os.path.splitext(input_csv_filename)
     output_filename = f'{split_output_filename[0]}_OUTPUT{split_output_filename[1]}'
 
     print(f'Writing to {output_filename}')
@@ -47,4 +51,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except CSVError as error:
+        sys.exit(f'Error: {error}')

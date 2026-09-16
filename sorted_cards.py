@@ -5,23 +5,15 @@
 # LICENSE file in the root directory of this source tree.
 
 import sys
-from os.path import exists
 
-from CSV import input_csv
+from CLI import input_filename
+from CSV import CSVError, input_csv
 from Product import get_total_price
 
 
 def main():
-    arguments = sys.argv[1:]
-    input_filename = 'TCG.csv'
-    if arguments:
-        filename_argument = arguments[0]
-        if exists(filename_argument):
-            input_filename = filename_argument
-        elif not exists(input_filename):
-            raise Exception('Either no filename was input, or it was invalid.')
-
-    products_list = input_csv(input_filename)
+    input_csv_filename = input_filename('List the products in a TCGPlayer pricing export by price.')
+    products_list = input_csv(input_csv_filename)
 
     print(f'Total price: ${get_total_price(products_list)}')
     for product in sorted(products_list, key=lambda product: product.marketplace_price, reverse=True):
@@ -30,5 +22,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
-
+    try:
+        main()
+    except CSVError as error:
+        sys.exit(f'Error: {error}')
