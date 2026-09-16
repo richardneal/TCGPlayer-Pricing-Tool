@@ -12,10 +12,16 @@ from Enums.Headers import Headers
 from Enums.Price import Price, SYP_DEFAULT_PRICE, round_up_to_99_cents
 from Enums.Rarity import Rarity
 
-# Reprices that would move a price by more than this percent are reported and
-# skipped, so that one bad day of TCGPlayer data cannot rewrite a whole
-# inventory unattended. Pass max_change=None to apply every reprice.
-MAX_PRICE_CHANGE = Decimal('50')
+# Off by default: every reprice is applied, however large. Set a percentage here
+# (50 is a reasonable starting point) or pass --max-change to have reprices over
+# that size reported and skipped instead, so that one bad day of TCGPlayer data
+# cannot rewrite a whole inventory unattended.
+MAX_PRICE_CHANGE: Decimal | None = None
+
+# When a limit is in force, it only applies once there is real money in it. A
+# cheap card going from $1.98 to $2.99 is over any sane percentage while being a
+# dollar, and holding those back buries the changes actually worth looking at.
+MIN_PRICE_CHANGE_TO_SKIP = Decimal('5')
 
 
 class Product:
@@ -106,7 +112,8 @@ class Product:
         return (new_price.or_zero() - self.marketplace_price.price) * 100 / self.marketplace_price.price
 
     def reprice(self, new_price: Price, multiplier: Decimal = Decimal(1), round_to_99_cents: bool = False,
-                max_change: Decimal | None = MAX_PRICE_CHANGE, show_out_of_stock: bool = False):
+                max_change: Decimal | None = MAX_PRICE_CHANGE, show_out_of_stock: bool = False,
+                min_change: Decimal = MIN_PRICE_CHANGE_TO_SKIP):
         if not new_price:
             return
 
@@ -124,10 +131,13 @@ class Product:
         else:
             previous_price = 'no price'
 
-        if max_change is not None and percent_change is not None and abs(percent_change) > max_change:
-            print(f'Not repricing {self.description} from {previous_price} to ${new_price}: a '
-                  f'{percent_change.quantize(Decimal("0.1"))}% difference is over the {max_change:.0f}% limit. '
-                  f'Reprice it by hand if that is correct.')
+        absolute_change = abs(new_price.or_zero() - self.marketplace_price.or_zero())
+        if max_change is not None and percent_change is not None \
+                and abs(percent_change) > max_change and absolute_change >= min_change:
+            if self.total_quantity > 0 or show_out_of_stock:
+                print(f'Not repricing {self.description} from {previous_price} to ${new_price}: a '
+                      f'{percent_change.quantize(Decimal("0.1"))}% difference is over the {max_change:.0f}% limit. '
+                      f'Reprice it by hand if that is correct.')
             return
 
         # Products you do not hold are repriced too, so their price is current when

@@ -34,17 +34,20 @@ That will reprice all products provided from the input CSV (without modifying it
    you already had alone. Only a product with no price at all is given $999.99, along with a warning, so that it is easy
    to find and correct in the output CSV rather than being listed at a price you did not choose.
 
-Each repriced product that you have in stock is logged with its new price and the percent change from the old one, and the
-total value of your inventory is printed before and after repricing so you can see the overall effect at a glance.
+Each repriced product that you have in stock is logged with its old price, its new price and the percent change between
+them, and the total value of your inventory is printed before and after repricing so you can see the overall effect at a glance.
 
-As a safety net, a reprice that would move a price by more than 50% is reported and skipped rather than applied, so that
-one bad day of TCGPlayer data cannot rewrite your whole inventory unattended. Those products are listed for you to review
-by hand. Use `--max-change <percent>` to tighten or loosen that, or `--no-max-change` to apply every reprice however large.
+Every reprice is applied by default, however large. If you would rather look over the big swings yourself before they reach
+your listings, `--max-change <percent>` reports and skips any reprice that would move a price by more than that, so one bad
+day of TCGPlayer data cannot rewrite your whole inventory unattended. `--max-change 50` is a reasonable starting point.
 
 A few other options are worth knowing:
 - `--markup <multiplier>` changes the 1.1 in rule 2, so `--markup 1.25` prices those products at 1.25 x TCG Low + Shipping.
-- `--show-out-of-stock` also reports products you hold none of. They are always repriced, so their price is current when you
-  restock, but they are left out of the log by default because they tend to outnumber the ones you actually have.
+- `--show-out-of-stock` also reports products you hold none of, both those repriced and those held back by `--max-change`.
+  They are always repriced, so their price is current when you restock, but they are left out of the log by default because
+  they tend to outnumber the ones you actually have.
+- `--min-change <dollars>` stops `--max-change` from holding back trivial amounts: a card going from $1.98 to $2.99 is over
+  any sane percentage while being a dollar. It defaults to 5, and only matters when `--max-change` is in use.
 - `-o/--output <file>` writes the repriced CSV somewhere other than next to the input, which is worth using with `--latest`
   so you do not leave output CSVs in your downloads folder.
 
