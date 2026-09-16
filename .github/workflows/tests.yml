@@ -12,14 +12,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The README claims Python 3.9 and up, so check that it is still true.
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
+        # Every Python still receiving security fixes. 3.9 and 3.10 are past, or
+        # about to pass, end of life.
+        python-version: ['3.11', '3.12', '3.13', '3.14']
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 

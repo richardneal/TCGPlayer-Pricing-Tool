@@ -6,7 +6,7 @@ This is mostly meant as a starting point for any sellers looking to automate the
 someone with a small amount of Python knowledge to modify the pricing heuristics to their liking. 
 
 # Requirements
-This tool requires Python >= 3.9 and the above CSV export. It uses only the standard library, so there is nothing to install.
+This tool requires Python >= 3.11 and the above CSV export. It uses only the standard library, so there is nothing to install.
 
 # Installing
 Neither script has to be installed: `python3 reprice_csv.py <export.csv>` works from the repository, and from anywhere if
