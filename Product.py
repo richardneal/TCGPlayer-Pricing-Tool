@@ -100,3 +100,7 @@ class Product:
                 if self.total_quantity > 0:
                     print(f'Repricing {self} from {self.marketplace_price} to {new_price}, with a {percent_difference}')
                 self.marketplace_price = new_price
+
+
+def get_total_price(products: list[Product]) -> float:
+    return round(sum((product.marketplace_price.price * product.total_quantity for product in products)), 2)

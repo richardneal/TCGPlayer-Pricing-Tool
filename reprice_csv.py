@@ -9,7 +9,7 @@ import sys
 from os.path import exists
 
 from CSV import output_csv, input_csv
-from Product import Product
+from Product import Product, get_total_price
 
 
 def price_products(products: list[Product]):
@@ -21,10 +21,6 @@ def price_products(products: list[Product]):
         # Otherwise, set it to 1.1x TCGLow + Shipping, rounded to 99 cents
         elif product.low_price_with_shipping:
             product.reprice(product.low_price_with_shipping, 1.1, True)
-
-
-def get_total_price(products: list[Product]) -> float:
-    return round(sum((product.marketplace_price.price * product.total_quantity for product in products)), 2)
 
 
 def main():

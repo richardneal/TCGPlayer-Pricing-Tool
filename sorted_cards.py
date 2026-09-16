@@ -8,11 +8,7 @@ import sys
 from os.path import exists
 
 from CSV import input_csv
-from Product import Product
-
-
-def get_total_price(products: list[Product]) -> float:
-    return round(sum((product.marketplace_price.price * product.total_quantity for product in products)), 2)
+from Product import get_total_price
 
 
 def main():
