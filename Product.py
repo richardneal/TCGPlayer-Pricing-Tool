@@ -54,9 +54,13 @@ class Product:
         self.title = title
 
     def __str__(self):
-        return f'{self.total_quantity}x {self.set_name}: {self.product_name} - ' \
-               f'{self.condition.condition.value} {self.condition.finish.value} - ' \
-               f'${self.marketplace_price}'
+        description = f'{self.total_quantity}x {self.set_name}: {self.product_name} - ' \
+                      f'{self.condition.condition.value}'
+        if self.condition.finish.value:
+            description += f' {self.condition.finish.value}'
+        if self.marketplace_price:
+            description += f' - ${self.marketplace_price}'
+        return description
 
     def to_row(self) -> list:
         if not self.marketplace_price:
