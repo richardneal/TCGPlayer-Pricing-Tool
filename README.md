@@ -1,4 +1,6 @@
 # TCGPlayer Pricing Tool
+[![Tests](https://github.com/richardneal/TCGPlayer-Pricing-Tool/actions/workflows/tests.yml/badge.svg)](https://github.com/richardneal/TCGPlayer-Pricing-Tool/actions/workflows/tests.yml)
+
 Basic pricing tool to be used with CSVs exported from TCGPlayer's pricing page. 
 This is mostly meant as a starting point for any sellers looking to automate their pricing, so while it can be used as is, it ideally is extensible enough for
 someone with a small amount of Python knowledge to modify the pricing heuristics to their liking. 
@@ -60,7 +62,8 @@ way to look over an export before or after repricing it.
 
 # Tests
 Run `python3 -m unittest discover -s tests -t .` from the repository root. They use only `unittest` from the standard
-library, so like the tool itself there is nothing to install. They cover the pricing rules and the CSV round trip, and
+library, so like the tool itself there is nothing to install. GitHub Actions runs them on every push and pull request,
+against each Python version the tool claims to support. They cover the pricing rules and the CSV round trip, and
 most of them exist because something went wrong once: prices that were a dollar out because the markup was computed in
 float, blank cells that came back as `0.0`, foreign cards read as English, and `--latest` picking up its own output.
 
