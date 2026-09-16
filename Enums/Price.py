@@ -43,7 +43,7 @@ class Price:
         if not self:
             return 'No price set'
         else:
-            return f'{round(self.price, 2)}'
+            return f'{self.price:.2f}'
 
     def __bool__(self):
         return self.price != 0.0
