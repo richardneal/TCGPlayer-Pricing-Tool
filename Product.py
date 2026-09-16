@@ -106,7 +106,7 @@ class Product:
         return (new_price.or_zero() - self.marketplace_price.price) * 100 / self.marketplace_price.price
 
     def reprice(self, new_price: Price, multiplier: Decimal = Decimal(1), round_to_99_cents: bool = False,
-                max_change: Decimal | None = MAX_PRICE_CHANGE):
+                max_change: Decimal | None = MAX_PRICE_CHANGE, show_out_of_stock: bool = False):
         if not new_price:
             return
 
@@ -130,7 +130,9 @@ class Product:
                   f'Reprice it by hand if that is correct.')
             return
 
-        if self.total_quantity > 0:
+        # Products you do not hold are repriced too, so their price is current when
+        # you restock, but they are not worth reporting unless asked for.
+        if self.total_quantity > 0 or show_out_of_stock:
             if percent_change is None:
                 difference = ''
             else:

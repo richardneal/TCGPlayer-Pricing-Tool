@@ -10,7 +10,7 @@ import os.path
 import sys
 from decimal import Decimal
 
-from CLI import base_parser, decimal_argument, parse_arguments
+from CLI import OUTPUT_SUFFIX, base_parser, decimal_argument, parse_arguments
 from CSV import CSVError, output_csv, input_csv
 from Enums.Price import Price, SYP_DEFAULT_PRICE
 from Product import MAX_PRICE_CHANGE, Product, get_total_price
@@ -20,15 +20,16 @@ MARKUP = Decimal('1.1')
 
 
 def price_products(products: list[Product], markup: Decimal = MARKUP,
-                   max_change: Decimal | None = MAX_PRICE_CHANGE):
+                   max_change: Decimal | None = MAX_PRICE_CHANGE, show_out_of_stock: bool = False):
     for product in products:
         # If the product has a Direct Low price, or is sealed, set it to the highest of Direct Low or TCGLow + Shipping
         if product.direct_low_price or product.condition.is_sealed():
             new_price = max(product.direct_low_price, product.low_price_with_shipping)
-            product.reprice(new_price, max_change=max_change)
+            product.reprice(new_price, max_change=max_change, show_out_of_stock=show_out_of_stock)
         # Otherwise, set it to 1.1x TCGLow + Shipping, rounded to 99 cents
         elif product.low_price_with_shipping:
-            product.reprice(product.low_price_with_shipping, markup, True, max_change=max_change)
+            product.reprice(product.low_price_with_shipping, markup, True, max_change=max_change,
+                            show_out_of_stock=show_out_of_stock)
 
         # Anything still unpriced has no comparable products to price against, so
         # flag it rather than listing it at whatever TCGPlayer happens to default to.
@@ -40,13 +41,15 @@ def price_products(products: list[Product], markup: Decimal = MARKUP,
 
 def default_output_filename(input_filename: str) -> str:
     root, extension = os.path.splitext(input_filename)
-    return f'{root}_OUTPUT{extension}'
+    return f'{root}{OUTPUT_SUFFIX}{extension}'
 
 
 def main():
     parser = base_parser('Reprice a TCGPlayer pricing export.')
     parser.add_argument('-o', '--output', metavar='CSV_FILE',
                         help='where to write the repriced CSV (default: <input>_OUTPUT.csv)')
+    parser.add_argument('--show-out-of-stock', action='store_true',
+                        help='also report reprices of products you have none of')
     parser.add_argument('--markup', type=decimal_argument, default=MARKUP,
                         help=f'what to multiply TCG Low + Shipping by (default: {MARKUP})')
     limit = parser.add_mutually_exclusive_group()
@@ -60,7 +63,7 @@ def main():
     products_list = input_csv(arguments.csv_file)
 
     print(f'Total price before repricing: ${get_total_price(products_list)}')
-    price_products(products_list, arguments.markup, arguments.max_change)
+    price_products(products_list, arguments.markup, arguments.max_change, arguments.show_out_of_stock)
     print(f'Total price after repricing: ${get_total_price(products_list)}')
 
     output_filename = arguments.output or default_output_filename(arguments.csv_file)
