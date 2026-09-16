@@ -55,7 +55,8 @@ class Product:
 
     def __str__(self):
         return f'{self.total_quantity}x {self.set_name}: {self.product_name} - ' \
-               f'{self.condition.condition.value} {self.condition.finish.value}'
+               f'{self.condition.condition.value} {self.condition.finish.value} - ' \
+               f'${self.marketplace_price}'
 
     def to_row(self) -> list:
         if not self.marketplace_price:
@@ -91,5 +92,11 @@ class Product:
                 new_price = Price(new_price.price * multiplier)
 
             if new_price != self.marketplace_price:
-                print(f'Repricing {self} from {self.marketplace_price} to {new_price}')
+                try:
+                    percent_difference = round((new_price.price - self.marketplace_price.price) * 100 / self.marketplace_price.price, 1)
+                    percent_difference = f'{percent_difference}% difference'
+                except ZeroDivisionError:
+                    percent_difference = 'Undefined difference'
+                if self.total_quantity > 0:
+                    print(f'Repricing {self} from {self.marketplace_price} to {new_price}, with a {percent_difference}')
                 self.marketplace_price = new_price
