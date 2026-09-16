@@ -58,6 +58,12 @@ Run `python3 sorted_cards.py <path_to_tcgplayer_export.csv>` (or `tcg-list`) to 
 product you have in stock sorted from most to least expensive. This one is read-only; it never writes a CSV, so it is a safe
 way to look over an export before or after repricing it.
 
+# Tests
+Run `python3 -m unittest discover -s tests -t .` from the repository root. They use only `unittest` from the standard
+library, so like the tool itself there is nothing to install. They cover the pricing rules and the CSV round trip, and
+most of them exist because something went wrong once: prices that were a dollar out because the markup was computed in
+float, blank cells that came back as `0.0`, foreign cards read as English, and `--latest` picking up its own output.
+
 # License
 This project is licensed under BSD, the terms and details of which can be found in LICENSE.
 
