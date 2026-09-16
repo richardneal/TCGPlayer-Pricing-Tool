@@ -16,6 +16,10 @@ DEFAULT_FILENAME = 'TCG.csv'
 DOWNLOADS_DIRECTORY = Path.home() / 'Downloads'
 EXPORT_PATTERN = 'TCGplayer*MyPricing*.csv'
 
+# What repriced CSVs are named with. --latest has to skip them, or repricing an
+# export twice would compound its own markup.
+OUTPUT_SUFFIX = '_OUTPUT'
+
 
 def decimal_argument(value: str) -> Decimal:
     try:
@@ -25,8 +29,13 @@ def decimal_argument(value: str) -> Decimal:
 
 
 def latest_export(directory: Path = DOWNLOADS_DIRECTORY, pattern: str = EXPORT_PATTERN) -> Path | None:
-    """The most recently downloaded TCGPlayer export, or None if there are none."""
-    exports = sorted(directory.glob(pattern), key=lambda export: export.stat().st_mtime, reverse=True)
+    """The most recently downloaded TCGPlayer export, or None if there are none.
+
+    Output CSVs this tool wrote are skipped, so that repricing --latest twice does
+    not reprice its own output.
+    """
+    candidates = [export for export in directory.glob(pattern) if not export.stem.endswith(OUTPUT_SUFFIX)]
+    exports = sorted(candidates, key=lambda export: export.stat().st_mtime, reverse=True)
     if exports:
         return exports[0]
     else:
