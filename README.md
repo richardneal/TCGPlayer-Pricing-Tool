@@ -41,8 +41,10 @@ As a safety net, a reprice that would move a price by more than 50% is reported 
 one bad day of TCGPlayer data cannot rewrite your whole inventory unattended. Those products are listed for you to review
 by hand. Use `--max-change <percent>` to tighten or loosen that, or `--no-max-change` to apply every reprice however large.
 
-Two other options are worth knowing:
+A few other options are worth knowing:
 - `--markup <multiplier>` changes the 1.1 in rule 2, so `--markup 1.25` prices those products at 1.25 x TCG Low + Shipping.
+- `--show-out-of-stock` also reports products you hold none of. They are always repriced, so their price is current when you
+  restock, but they are left out of the log by default because they tend to outnumber the ones you actually have.
 - `-o/--output <file>` writes the repriced CSV somewhere other than next to the input, which is worth using with `--latest`
   so you do not leave output CSVs in your downloads folder.
 
