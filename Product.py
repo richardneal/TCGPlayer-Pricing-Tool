@@ -62,9 +62,9 @@ class Product:
         if not self.marketplace_price:
             print(f'{self} has no price set. Defaulting it to {Consts.SYP_DEFAULT_PRICE.value}, '
                   f'you should modify that in the output CSV')
-            marketplace_price = Consts.SYP_DEFAULT_PRICE
+            marketplace_price = f'{Consts.SYP_DEFAULT_PRICE.value:.2f}'
         else:
-            marketplace_price = self.marketplace_price.price
+            marketplace_price = self.marketplace_price.to_csv()
         return [
             self.tcgplayer_id,
             self.product_line,
@@ -74,10 +74,10 @@ class Product:
             self.number,
             self.rarity.value,
             self.condition.string,
-            self.market_price.price,
-            self.direct_low_price.price,
-            self.low_price_with_shipping.price,
-            self.low_price.price,
+            self.market_price.to_csv(),
+            self.direct_low_price.to_csv(),
+            self.low_price_with_shipping.to_csv(),
+            self.low_price.to_csv(),
             self.total_quantity,
             self.add_to_quantity,
             marketplace_price,

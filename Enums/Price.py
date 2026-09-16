@@ -45,5 +45,11 @@ class Price:
         else:
             return f'{self.price:.2f}'
 
+    def to_csv(self) -> str:
+        if not self:
+            return ''
+        else:
+            return f'{self.price:.2f}'
+
     def __bool__(self):
         return self.price != 0.0
