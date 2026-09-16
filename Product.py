@@ -12,10 +12,10 @@ from Enums.Headers import Headers
 from Enums.Price import Price, SYP_DEFAULT_PRICE, round_up_to_99_cents
 from Enums.Rarity import Rarity
 
-# Reprices that would move a price by more than this fraction are reported and
+# Reprices that would move a price by more than this percent are reported and
 # skipped, so that one bad day of TCGPlayer data cannot rewrite a whole
-# inventory unattended. Set it to None to apply every reprice regardless of size.
-MAX_PRICE_CHANGE = Decimal('0.5')
+# inventory unattended. Pass max_change=None to apply every reprice.
+MAX_PRICE_CHANGE = Decimal('50')
 
 
 class Product:
@@ -99,7 +99,8 @@ class Product:
             return None
         return (new_price.or_zero() - self.marketplace_price.price) * 100 / self.marketplace_price.price
 
-    def reprice(self, new_price: Price, multiplier: Decimal = Decimal(1), round_to_99_cents: bool = False):
+    def reprice(self, new_price: Price, multiplier: Decimal = Decimal(1), round_to_99_cents: bool = False,
+                max_change: Decimal | None = MAX_PRICE_CHANGE):
         if not new_price:
             return
 
@@ -117,10 +118,9 @@ class Product:
         else:
             change_description = f'a {percent_change.quantize(Decimal("0.1"))}% difference'
 
-        if MAX_PRICE_CHANGE is not None and percent_change is not None \
-                and abs(percent_change) > MAX_PRICE_CHANGE * 100:
+        if max_change is not None and percent_change is not None and abs(percent_change) > max_change:
             print(f'Leaving {self} alone: ${new_price} would be {change_description}, over the '
-                  f'{MAX_PRICE_CHANGE * 100:.0f}% limit. Reprice it by hand if that is correct.')
+                  f'{max_change:.0f}% limit. Reprice it by hand if that is correct.')
             return
 
         if self.total_quantity > 0:

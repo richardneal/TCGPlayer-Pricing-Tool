@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright (c) 2022, Richard Neal
 # All rights reserved.
 #
@@ -6,14 +7,14 @@
 
 import sys
 
-from CLI import input_filename
+from CLI import base_parser, parse_arguments
 from CSV import CSVError, input_csv
 from Product import get_total_price
 
 
 def main():
-    input_csv_filename = input_filename('List the products in a TCGPlayer pricing export by price.')
-    products_list = input_csv(input_csv_filename)
+    arguments = parse_arguments(base_parser('List the products in a TCGPlayer pricing export by price.'))
+    products_list = input_csv(arguments.csv_file)
 
     print(f'Total price: ${get_total_price(products_list)}')
     for product in sorted(products_list, key=lambda product: product.marketplace_price, reverse=True):

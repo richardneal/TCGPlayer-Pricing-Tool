@@ -1,31 +1,34 @@
+#!/usr/bin/env python3
 # Copyright (c) 2022, Richard Neal
 # All rights reserved.
 #
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
+from __future__ import annotations
 
 import os.path
 import sys
 from decimal import Decimal
 
-from CLI import input_filename
+from CLI import base_parser, decimal_argument, parse_arguments
 from CSV import CSVError, output_csv, input_csv
 from Enums.Price import Price, SYP_DEFAULT_PRICE
-from Product import Product, get_total_price
+from Product import MAX_PRICE_CHANGE, Product, get_total_price
 
 # What to mark a product up by when pricing off TCG Low + Shipping.
 MARKUP = Decimal('1.1')
 
 
-def price_products(products: list[Product]):
+def price_products(products: list[Product], markup: Decimal = MARKUP,
+                   max_change: Decimal | None = MAX_PRICE_CHANGE):
     for product in products:
         # If the product has a Direct Low price, or is sealed, set it to the highest of Direct Low or TCGLow + Shipping
         if product.direct_low_price or product.condition.is_sealed():
             new_price = max(product.direct_low_price, product.low_price_with_shipping)
-            product.reprice(new_price)
+            product.reprice(new_price, max_change=max_change)
         # Otherwise, set it to 1.1x TCGLow + Shipping, rounded to 99 cents
         elif product.low_price_with_shipping:
-            product.reprice(product.low_price_with_shipping, MARKUP, True)
+            product.reprice(product.low_price_with_shipping, markup, True, max_change=max_change)
 
         # Anything still unpriced has no comparable products to price against, so
         # flag it rather than listing it at whatever TCGPlayer happens to default to.
@@ -35,17 +38,32 @@ def price_products(products: list[Product]):
             product.marketplace_price = Price(SYP_DEFAULT_PRICE)
 
 
+def default_output_filename(input_filename: str) -> str:
+    root, extension = os.path.splitext(input_filename)
+    return f'{root}_OUTPUT{extension}'
+
+
 def main():
-    input_csv_filename = input_filename('Reprice a TCGPlayer pricing export.')
-    products_list = input_csv(input_csv_filename)
+    parser = base_parser('Reprice a TCGPlayer pricing export.')
+    parser.add_argument('-o', '--output', metavar='CSV_FILE',
+                        help='where to write the repriced CSV (default: <input>_OUTPUT.csv)')
+    parser.add_argument('--markup', type=decimal_argument, default=MARKUP,
+                        help=f'what to multiply TCG Low + Shipping by (default: {MARKUP})')
+    limit = parser.add_mutually_exclusive_group()
+    limit.add_argument('--max-change', type=decimal_argument, default=MAX_PRICE_CHANGE, metavar='PERCENT',
+                       help=f'skip reprices that move a price by more than this percent '
+                            f'(default: {MAX_PRICE_CHANGE})')
+    limit.add_argument('--no-max-change', action='store_const', const=None, dest='max_change',
+                       help='apply every reprice, however large')
+    arguments = parse_arguments(parser)
+
+    products_list = input_csv(arguments.csv_file)
 
     print(f'Total price before repricing: ${get_total_price(products_list)}')
-    price_products(products_list)
+    price_products(products_list, arguments.markup, arguments.max_change)
     print(f'Total price after repricing: ${get_total_price(products_list)}')
 
-    split_output_filename = os.path.splitext(input_csv_filename)
-    output_filename = f'{split_output_filename[0]}_OUTPUT{split_output_filename[1]}'
-
+    output_filename = arguments.output or default_output_filename(arguments.csv_file)
     print(f'Writing to {output_filename}')
     output_csv(output_filename, products_list)
 
