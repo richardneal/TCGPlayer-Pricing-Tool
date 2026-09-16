@@ -60,14 +60,20 @@ class Product:
         self.product_name = product_name
         self.title = title
 
-    def __str__(self):
+    @property
+    def description(self) -> str:
+        """What the product is, without its price, for messages that state a price themselves."""
         description = f'{self.total_quantity}x {self.set_name}: {self.product_name} - ' \
                       f'{self.condition.condition.value}'
         if self.condition.finish.value:
             description += f' {self.condition.finish.value}'
-        if self.marketplace_price:
-            description += f' - ${self.marketplace_price}'
         return description
+
+    def __str__(self):
+        if self.marketplace_price:
+            return f'{self.description} - ${self.marketplace_price}'
+        else:
+            return self.description
 
     def to_row(self) -> list:
         # Keyed by header rather than positional, so that the row can never fall
@@ -113,18 +119,23 @@ class Product:
             return
 
         percent_change = self.percent_change_to(new_price)
-        if percent_change is None:
-            change_description = 'no previous price'
+        if self.marketplace_price:
+            previous_price = f'${self.marketplace_price}'
         else:
-            change_description = f'a {percent_change.quantize(Decimal("0.1"))}% difference'
+            previous_price = 'no price'
 
         if max_change is not None and percent_change is not None and abs(percent_change) > max_change:
-            print(f'Leaving {self} alone: ${new_price} would be {change_description}, over the '
-                  f'{max_change:.0f}% limit. Reprice it by hand if that is correct.')
+            print(f'Not repricing {self.description} from {previous_price} to ${new_price}: a '
+                  f'{percent_change.quantize(Decimal("0.1"))}% difference is over the {max_change:.0f}% limit. '
+                  f'Reprice it by hand if that is correct.')
             return
 
         if self.total_quantity > 0:
-            print(f'Repricing {self} to ${new_price} ({change_description})')
+            if percent_change is None:
+                difference = ''
+            else:
+                difference = f' (a {percent_change.quantize(Decimal("0.1"))}% difference)'
+            print(f'Repricing {self.description} from {previous_price} to ${new_price}{difference}')
         self.marketplace_price = new_price
 
 
